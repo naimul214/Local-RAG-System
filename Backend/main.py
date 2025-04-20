@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import PyPDF2, requests
 from bs4 import BeautifulSoup
+import io
 
 app = FastAPI(title="Local RAG QA Backend")
 
@@ -53,10 +54,14 @@ async def upload_document(file: UploadFile = File(None), url: str = Form(None)):
     if file is not None:
         # Read PDF file content
         file_bytes = await file.read()
+        pdf_stream = io.BytesIO(file_bytes) 
+        
         try:
-            reader = PyPDF2.PdfReader(file_bytes)
+            reader = PyPDF2.PdfReader(pdf_stream)
+            
         except Exception as e:
             return {"error": f"Failed to read PDF: {e}"}
+
         # Extract text from each page of the PDF
         for page in reader.pages:
             if page.extract_text():
